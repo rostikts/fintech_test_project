@@ -2,10 +2,20 @@ version: "3.7"
 
 services:
 
+  db:
+    image: postgres:13.6-alpine
+    restart: on-failure
+    env_file: .env
+    ports:
+      - "4011:5432"
+
   app:
+    depends_on:
+      - db
     build:
       context: .
       dockerfile: docker/Dockerfile
+    env_file: .env
     volumes:
       - ./:/app
     ports:

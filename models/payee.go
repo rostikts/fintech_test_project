@@ -1,8 +1,8 @@
 package models
 
 type Payee struct {
-	ID          uint
-	Name        string
-	BankMfo     uint
-	BankAccount string
+	ID          uint   `db:"id"`
+	Name        string `db:"name"`
+	BankMfo     uint   `db:"bank_mfo"`
+	BankAccount string `db:"bank_account"`
 }

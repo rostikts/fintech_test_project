@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS transaction (
     id serial,
     request_id int not null,
     terminal_id int not null,
+    partner_object_id int not null,
     payment_id int not null,
     service_id int not null,
     payee_id int not null,

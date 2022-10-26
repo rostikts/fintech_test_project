@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS transaction;
+
+DROP TABLE IF EXISTS service;
+
+DROP TABLE IF EXISTS payment;
+
+DROP TABLE IF EXISTS payee;

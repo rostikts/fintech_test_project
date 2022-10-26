@@ -5,7 +5,6 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/joho/godotenv"
 	"github.com/phuslu/log"
 	"github.com/rostikts/fintech_test_project/config"
 	"github.com/rostikts/fintech_test_project/models"
@@ -19,10 +18,6 @@ import (
 var repo transactionRepository
 
 func TestMain(m *testing.M) {
-	err := godotenv.Load("./../../../.env")
-	if err != nil {
-		log.DefaultLogger.Fatal().Msg("Error loading .env file" + err.Error())
-	}
 	db := test_utils.NewTestDB(config.Config.DBConfig)
 	defer db.Close()
 

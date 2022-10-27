@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/gocarina/gocsv"
 	"github.com/phuslu/log"
 	"github.com/rostikts/fintech_test_project/db/models"
@@ -9,6 +8,8 @@ import (
 	"github.com/rostikts/fintech_test_project/pkg/datatypes"
 	"io/ioutil"
 	"net/http"
+	"sync"
+	"sync/atomic"
 )
 
 type parsedTransaction struct {
@@ -41,13 +42,20 @@ func (s loaderService) ParseDocument(url string) (successCount, failedCount int6
 	if err != nil {
 		return 0, 0, err
 	}
+	wg := sync.WaitGroup{}
 	for _, v := range parsedTrs {
-		if err := s.SaveTransaction(v.ToModel()); err != nil {
-			log.DefaultLogger.Error().Err(err).Msg("The document is not saved to db")
-			failedCount += 1
-		}
-		successCount += 1
+		v := v
+		wg.Add(1)
+		go func() {
+			if err := s.SaveTransaction(v.ToModel()); err != nil {
+				log.DefaultLogger.Error().Err(err).Msg("The document is not saved to db")
+				atomic.AddInt64(&failedCount, 1)
+			}
+			atomic.AddInt64(&successCount, 1)
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 	return
 }
 
@@ -60,11 +68,9 @@ func (s loaderService) SaveTransaction(transaction models.Transaction) error {
 }
 
 func downloadDocument(url string) ([]byte, error) {
-	fmt.Println("Downloading file...")
-
 	response, err := http.Get(url)
 	if err != nil {
-		fmt.Println("Error while downloading", url, "-", err)
+		log.DefaultLogger.Error().Err(err).Str("url", url).Msg("Error while downloading")
 		return []byte{}, err
 	}
 	defer response.Body.Close()

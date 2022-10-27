@@ -30,9 +30,15 @@ func (r transactionRepository) SaveTransaction(data models.Transaction) error {
 		return err
 	}
 
-	_, err = tx.Exec(`INSERT INTO payment (id, type, number, narrative) VALUES ($1, $2, $3, $4)`, data.Payment.ID, data.Payment.Type, data.Payment.Number, data.Payment.Narrative)
+	rows, err := tx.Query(`INSERT INTO payment (type, number, narrative) VALUES ($1, $2, $3) RETURNING id`, data.Payment.Type, data.Payment.Number, data.Payment.Narrative)
+	defer rows.Close()
 	if err != nil {
 		return err
+	}
+	for rows.Next() {
+		if err := rows.Scan(&data.Payment.ID); err != nil {
+			return err
+		}
 	}
 
 	_, err = tx.Exec(`INSERT INTO transaction (request_id, terminal_id, partner_object_id, payment_id, service_id, payee_id, amount_total, amount_original, commission_ps, commission_client, commission_provider, date_input, date_post, status) 

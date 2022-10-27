@@ -1,11 +1,6 @@
 package repository
 
 import (
-	"fmt"
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/phuslu/log"
 	"github.com/rostikts/fintech_test_project/config"
 	"github.com/rostikts/fintech_test_project/models"
 	"github.com/rostikts/fintech_test_project/test_utils"
@@ -19,32 +14,8 @@ var repo transactionRepository
 
 func TestMain(m *testing.M) {
 	db := test_utils.NewTestDB(config.Config.DBConfig)
-	defer db.Close()
-
-	dns := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
-		config.Config.DBConfig.User,
-		config.Config.DBConfig.Password,
-		"localhost",
-		4011,
-		config.Config.DBConfig.Name,
-	)
-	migration, err := migrate.New("file://./../../../db/migrations", dns)
-	if err != nil {
-		log.DefaultLogger.Fatal().Err(err).Msg("error occurred during the creation of the migrations")
-	}
-
-	err = migration.Down()
-	if err != nil {
-		log.DefaultLogger.Error().Err(err).Msg("error occurred")
-	}
-
-	if err := migration.Up(); err != nil {
-		if err.Error() != "no change" {
-			log.DefaultLogger.Fatal().Err(err).Msg("error occurred")
-		}
-	}
 	repo = transactionRepository{db: db}
+	defer db.Close()
 	os.Exit(m.Run())
 }
 

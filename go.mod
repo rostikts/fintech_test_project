@@ -3,9 +3,9 @@ module github.com/rostikts/fintech_test_project
 go 1.18
 
 require (
+	github.com/gocarina/gocsv v0.0.0-20220927221512-ad3251f9fa25
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/joho/godotenv v1.4.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/lib/pq v1.10.7

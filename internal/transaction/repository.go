@@ -1,4 +1,4 @@
-package loader
+package transaction
 
 import (
 	"github.com/rostikts/fintech_test_project/db/models"

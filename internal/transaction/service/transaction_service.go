@@ -4,7 +4,7 @@ import (
 	"github.com/gocarina/gocsv"
 	"github.com/phuslu/log"
 	"github.com/rostikts/fintech_test_project/db/models"
-	"github.com/rostikts/fintech_test_project/internal/loader"
+	"github.com/rostikts/fintech_test_project/internal/transaction"
 	"github.com/rostikts/fintech_test_project/pkg/datatypes"
 	"io/ioutil"
 	"net/http"
@@ -25,15 +25,15 @@ func (tr parsedTransaction) ToModel() models.Transaction {
 	return res
 }
 
-type loaderService struct {
-	repo loader.Repository
+type transactionService struct {
+	repo transaction.Repository
 }
 
-func NewLoaderService(repository loader.Repository) loader.Service {
-	return loaderService{repo: repository}
+func NewTransactionService(repository transaction.Repository) transaction.Service {
+	return transactionService{repo: repository}
 }
 
-func (s loaderService) ParseDocument(url string) (successCount, failedCount int64, err error) {
+func (s transactionService) ParseDocument(url string) (successCount, failedCount int64, err error) {
 	document, err := downloadDocument(url)
 	if err != nil {
 		return 0, 0, err
@@ -59,7 +59,7 @@ func (s loaderService) ParseDocument(url string) (successCount, failedCount int6
 	return
 }
 
-func (s loaderService) SaveTransaction(transaction models.Transaction) error {
+func (s transactionService) SaveTransaction(transaction models.Transaction) error {
 	err := s.repo.SaveTransaction(transaction)
 	if err != nil {
 		return err

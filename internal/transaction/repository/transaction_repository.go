@@ -3,14 +3,14 @@ package repository
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rostikts/fintech_test_project/db/models"
-	"github.com/rostikts/fintech_test_project/internal/loader"
+	"github.com/rostikts/fintech_test_project/internal/transaction"
 )
 
 type transactionRepository struct {
 	db *sqlx.DB
 }
 
-func NewTransactionRepository(db *sqlx.DB) loader.Repository {
+func NewTransactionRepository(db *sqlx.DB) transaction.Repository {
 	return transactionRepository{db: db}
 }
 

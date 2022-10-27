@@ -1,7 +1,7 @@
 package registry
 
-import "github.com/rostikts/fintech_test_project/internal/loader"
+import "github.com/rostikts/fintech_test_project/internal/transaction"
 
 type AppController struct {
-	Transaction interface{ loader.Handler }
+	Transaction interface{ transaction.Handler }
 }

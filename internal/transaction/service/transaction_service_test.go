@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/rostikts/fintech_test_project/config"
-	"github.com/rostikts/fintech_test_project/internal/loader/repository"
+	"github.com/rostikts/fintech_test_project/internal/transaction/repository"
 	"github.com/rostikts/fintech_test_project/test_utils"
 	"os"
 	"testing"
@@ -10,12 +10,12 @@ import (
 
 const url = `https://drive.google.com/u/0/uc?id=1IwZ3uUCHGpSL2OoQu4mtbw7Ew3ZamcGB&export=download`
 
-var service loaderService
+var service transactionService
 
 func TestMain(m *testing.M) {
 	db := test_utils.NewTestDB(config.Config.DBConfig)
 	repo := repository.NewTransactionRepository(db)
-	service = loaderService{repo: repo}
+	service = transactionService{repo: repo}
 	defer db.Close()
 	os.Exit(m.Run())
 }

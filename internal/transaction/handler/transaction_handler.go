@@ -2,12 +2,12 @@ package handler
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/rostikts/fintech_test_project/internal/loader"
+	"github.com/rostikts/fintech_test_project/internal/transaction"
 	"net/http"
 )
 
-type loaderHandler struct {
-	service loader.Service
+type transactionHandler struct {
+	service transaction.Service
 }
 
 type parseDocumentsRequest struct {
@@ -18,11 +18,11 @@ type parseDocumentResponse struct {
 	Failed  int64 `json:"failed"`
 }
 
-func NewTransactionHandler(service loader.Service) loader.Handler {
-	return loaderHandler{service: service}
+func NewTransactionHandler(service transaction.Service) transaction.Handler {
+	return transactionHandler{service: service}
 }
 
-func (h loaderHandler) ParseDocuments(ctx echo.Context) error {
+func (h transactionHandler) ParseDocuments(ctx echo.Context) error {
 	var body parseDocumentsRequest
 
 	if err := ctx.Bind(&body); err != nil {

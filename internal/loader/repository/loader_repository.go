@@ -2,8 +2,8 @@ package repository
 
 import (
 	"github.com/jmoiron/sqlx"
+	"github.com/rostikts/fintech_test_project/db/models"
 	"github.com/rostikts/fintech_test_project/internal/loader"
-	"github.com/rostikts/fintech_test_project/models"
 )
 
 type transactionRepository struct {

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/rostikts/fintech_test_project/config"
-	"github.com/rostikts/fintech_test_project/models"
+	models2 "github.com/rostikts/fintech_test_project/db/models"
 	"github.com/rostikts/fintech_test_project/test_utils"
 	"os"
 	"reflect"
@@ -20,21 +20,21 @@ func TestMain(m *testing.M) {
 }
 
 func TestSaveTransaction(t *testing.T) {
-	data := models.Transaction{
+	data := models2.Transaction{
 		RequestID:       2,
 		TerminalID:      3,
 		PartnerObjectID: 4,
-		Payment: models.Payment{
+		Payment: models2.Payment{
 			ID:        1,
 			Type:      "type",
 			Number:    "num",
 			Narrative: "narrative",
 		},
-		Service: models.Service{
+		Service: models2.Service{
 			ID:   1,
 			Name: "Test service",
 		},
-		Payee: models.Payee{
+		Payee: models2.Payee{
 			ID:          1,
 			Name:        "test",
 			BankMfo:     123124,
@@ -56,21 +56,21 @@ func TestSaveTransaction(t *testing.T) {
 }
 
 func TestTransactionRepositoryGetRecords(t *testing.T) {
-	data := models.Transaction{
+	data := models2.Transaction{
 		RequestID:       2,
 		TerminalID:      3,
 		PartnerObjectID: 4,
-		Payment: models.Payment{
+		Payment: models2.Payment{
 			ID:        2,
 			Type:      "type",
 			Number:    "num",
 			Narrative: "narrative",
 		},
-		Service: models.Service{
+		Service: models2.Service{
 			ID:   2,
 			Name: "Test service",
 		},
-		Payee: models.Payee{
+		Payee: models2.Payee{
 			ID:          2,
 			Name:        "test",
 			BankMfo:     123124,

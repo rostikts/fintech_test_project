@@ -1,6 +1,8 @@
 package loader
 
-import "github.com/rostikts/fintech_test_project/models"
+import (
+	"github.com/rostikts/fintech_test_project/db/models"
+)
 
 type Repository interface {
 	SaveTransaction(data models.Transaction) error

@@ -1,0 +1,166 @@
+basePath: /api/v1
+definitions:
+  echo.HTTPError:
+    properties:
+      message: {}
+    type: object
+  handler.parseDocumentResponse:
+    properties:
+      failed:
+        type: integer
+      success:
+        type: integer
+    type: object
+  handler.parseDocumentsRequest:
+    properties:
+      url:
+        type: string
+    type: object
+  models.Payee:
+    properties:
+      bankAccount:
+        type: string
+      bankMfo:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.Payment:
+    properties:
+      id:
+        type: integer
+      narrative:
+        type: string
+      number:
+        type: string
+      type:
+        type: string
+    type: object
+  models.Service:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.Transaction:
+    properties:
+      amountOriginal:
+        type: integer
+      amountTotal:
+        type: integer
+      commissionClient:
+        type: integer
+      commissionPS:
+        type: number
+      commissionProvider:
+        type: number
+      dateInput:
+        type: string
+      datePost:
+        type: string
+      id:
+        type: integer
+      partnerObjectID:
+        type: integer
+      payee:
+        $ref: '#/definitions/models.Payee'
+      payment:
+        $ref: '#/definitions/models.Payment'
+      requestID:
+        type: integer
+      service:
+        $ref: '#/definitions/models.Service'
+      status:
+        type: string
+      terminalID:
+        type: integer
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: rostiktsyapura@gmail.com
+    name: Rostik
+  description: Documentation for test project for EVO trainee program
+  termsOfService: http://swagger.io/terms/
+  title: Swagger API
+  version: "1.0"
+paths:
+  /transactions:
+    get:
+      description: returns array of filtered transactions
+      parameters:
+      - description: filter by terminal_id
+        in: query
+        name: terminal_id
+        type: integer
+      - description: filter by transaction_id
+        in: query
+        name: transaction_id
+        type: integer
+      - description: filter by status
+        in: query
+        name: status
+        type: string
+      - description: filter by payment_type
+        in: query
+        name: payment_type
+        type: string
+      - description: filter from start date
+        format: date
+        in: query
+        name: from
+        type: string
+      - description: filter to ending date
+        format: date
+        in: query
+        name: to
+        type: string
+      - description: partial match by narrative
+        in: query
+        name: payment_narrative
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Transaction'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: returns array of transactions
+      tags:
+      - transactions
+  /transactions/parse:
+    post:
+      consumes:
+      - application/json
+      description: parse document with transactions
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        schema:
+          $ref: '#/definitions/handler.parseDocumentsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.parseDocumentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/echo.HTTPError'
+      summary: parse document
+      tags:
+      - transactions
+swagger: "2.0"

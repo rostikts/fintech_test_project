@@ -24,6 +24,16 @@ func NewTransactionHandler(service transaction.Service) transaction.Handler {
 	return transactionHandler{service: service}
 }
 
+// ParseDocuments godoc
+// @Summary      parse document
+// @Description  parse document with transactions
+// @Tags         transactions
+// @Accept       json
+// @Produce      json
+// @Param        payload          body     				 parseDocumentsRequest       false  "payload"
+// @Success      201  {object}    parseDocumentResponse
+// @Failure		 400  {object}    echo.HTTPError
+// @Router       /transactions/parse [post]
 func (h transactionHandler) ParseDocuments(ctx echo.Context) error {
 	var body parseDocumentsRequest
 
@@ -44,6 +54,21 @@ func (h transactionHandler) ParseDocuments(ctx echo.Context) error {
 	})
 }
 
+// GetTransactions godoc
+// @Summary      returns array of transactions
+// @Description  returns array of filtered transactions
+// @Tags         transactions
+// @Produce      json
+// @Param        terminal_id          query     int       false  "filter by terminal_id"
+// @Param        transaction_id       query     int       false  "filter by transaction_id"
+// @Param        status               query     string    false  "filter by status"
+// @Param        payment_type         query     string    false  "filter by payment_type"
+// @Param        from              	  query     string    false  "filter from start date"       Format(date)
+// @Param        to                   query     string    false  "filter to ending date"        Format(date)
+// @Param        payment_narrative    query     string    false  "partial match by narrative"
+// @Success      200  {array}   models.Transaction
+// @Failure		 400  {object}  echo.HTTPError
+// @Router       /transactions [get]
 func (h transactionHandler) GetTransactions(ctx echo.Context) error {
 	filters := extractFilters(ctx)
 

@@ -11,6 +11,8 @@ func NewRouter(e *echo.Echo, controller registry.AppController) *echo.Echo {
 	e.Use(middleware.Recover())
 
 	v1 := e.Group("/v1")
-	v1.POST("/parse", controller.Transaction.ParseDocuments)
+	transactionsGroup := v1.Group("/transactions")
+	transactionsGroup.POST("/parse", controller.Transaction.ParseDocuments)
+	transactionsGroup.GET("", controller.Transaction.GetTransactions)
 	return e
 }

@@ -17,3 +17,8 @@ cp .env_development .env
 
 After running the project the page with swagger doc will be available via the link: http://127.0.0.1:8000/swagger/index.html
 
+## Additional tasks
+
+1. Unit/integration -> done
+2. Allow to process big size files with limited RAM -> done in PR #6
+3. Endpoint for returning the csv -> in progress

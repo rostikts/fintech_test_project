@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/gocarina/gocsv"
 	"github.com/phuslu/log"
 	"github.com/rostikts/fintech_test_project/db/models"
@@ -67,6 +68,15 @@ func (s transactionService) SaveTransaction(transaction models.Transaction) erro
 	return nil
 }
 
+func (s transactionService) GetTransactions(filters map[string]string) ([]models.Transaction, error) {
+	formattedFilter := prepareFilters(filters)
+	res, err := s.repo.GetRecords(formattedFilter)
+	if err != nil {
+		return []models.Transaction{}, err
+	}
+	return res, nil
+}
+
 func downloadDocument(url string) ([]byte, error) {
 	response, err := http.Get(url)
 	if err != nil {
@@ -88,4 +98,37 @@ func parseDocument(data []byte) ([]parsedTransaction, error) {
 		return []parsedTransaction{}, err
 	}
 	return result, nil
+}
+
+func prepareFilters(filters map[string]string) string {
+	if len(filters) == 0 {
+		return ""
+	}
+	result := "WHERE "
+	counter := 0
+	for k, v := range filters {
+		switch k {
+		case "terminal_id":
+			result += fmt.Sprintf("%s=%s", k, v)
+		case "transaction_id":
+			result += fmt.Sprintf("t.id=%s", v)
+		case "status":
+			result += fmt.Sprintf("%s='%s'", k, v)
+		case "payment_type":
+			result += fmt.Sprintf("payment.type='%s'", v)
+		case "from":
+			result += fmt.Sprintf("date_input>='%v'", v)
+		case "to":
+			result += fmt.Sprintf("date_post<='%v'", v)
+		case "payment_narrative":
+			result += fmt.Sprintf("payment.narrative LIKE '%%%v%%'", v)
+
+		}
+
+		counter += 1
+		if len(filters) != counter {
+			result += " AND "
+		}
+	}
+	return result
 }

@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/phuslu/log"
 	"github.com/rostikts/fintech_test_project/db/models"
 	"github.com/rostikts/fintech_test_project/internal/transaction"
 )
@@ -67,18 +69,21 @@ func (r transactionRepository) SaveTransaction(data models.Transaction) error {
 	return nil
 }
 
-func (r transactionRepository) GetRecords() ([]models.Transaction, error) {
+func (r transactionRepository) GetRecords(filters string) ([]models.Transaction, error) {
 	var res []models.Transaction
-	rows, err := r.db.Queryx(
-		`SELECT t.id, t.request_id, t.terminal_id, t.partner_object_id, t.amount_original, t.amount_original, t.amount_total, t.commission_client, t.commission_client, t.commission_provider, t.commission_ps, t.date_input, t.date_post, t.status,
-       				  p.id "payee.id", p.name "payee.name", p.bank_mfo "payee.bank_mfo", p.bank_account "payee.bank_account",
+	qry := fmt.Sprintf(`SELECT t.id, t.request_id, t.terminal_id, t.partner_object_id, t.amount_original, t.amount_original, t.amount_total, t.commission_client, t.commission_client, t.commission_provider, t.commission_ps, t.date_input, t.date_post, t.status,
+       				  payee.id "payee.id", payee.name "payee.name", payee.bank_mfo "payee.bank_mfo", payee.bank_account "payee.bank_account",
        				  s.id "service.id", s.name "service.name",
-       				  p2.id "payment.id", p2.type "payment.type", p2.number "payment.number", p2.narrative "payment.narrative"
+       				  payment.id "payment.id", payment.type "payment.type", payment.number "payment.number", payment.narrative "payment.narrative"
 				FROM transaction t
-    				INNER JOIN payee p on p.id = t.payee_id
+    				INNER JOIN payee on payee.id = t.payee_id
     				INNER JOIN service s on s.id = t.service_id
-    				INNER JOIN payment p2 on p2.id = t.payment_id;`)
+    				INNER JOIN payment  on payment.id = t.payment_id 
+    			%s`, filters)
+
+	rows, err := r.db.Queryx(qry)
 	if err != nil {
+		log.DefaultLogger.Error().Err(err).Msg(qry)
 		return []models.Transaction{}, err
 	}
 	defer rows.Close()

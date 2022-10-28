@@ -30,3 +30,43 @@ func TestLoaderService_ParseDocument(t *testing.T) {
 	}
 
 }
+
+func TestPrepareFilters(t *testing.T) {
+	tests := []struct {
+		name     string
+		filters  map[string]string
+		expected string
+	}{
+		{
+			name:     "Numeral and non numeral filter",
+			filters:  map[string]string{"transaction_id": "32", "status": "accepted"},
+			expected: "WHERE t.id=32 AND status='accepted'",
+		},
+		{
+			name:     "Non numeral filter",
+			filters:  map[string]string{"payment_type": "test"},
+			expected: "WHERE payment.type='test'",
+		},
+		{
+			name:     "Date filter",
+			filters:  map[string]string{"from": "2021-02-10"},
+			expected: "WHERE date_input>='2021-02-10'",
+		},
+		{
+			name:     "Narrative filter",
+			filters:  map[string]string{"payment_narrative": "teest її"},
+			expected: "WHERE payment.narrative LIKE '%teest її%'",
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			result := prepareFilters(tc.filters)
+			if tc.expected != result {
+				t.Errorf("The filters are prepared incorrectly\nExpected: %s\nActual: %s", tc.expected, result)
+			}
+		})
+	}
+}

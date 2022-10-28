@@ -5,6 +5,11 @@
 - docker-compose
 
 ## Start the project
+First of all you should create your personal .env file in the root directory. The list of required values is stored in the `.env_development` file, feel free to copy this values to your file. Or execute the command:
+````
+cp .env_development .env
+````
+### Setting up the project
  - start the project vie `make start_project` command
  - run initial migrations `make run_local_migrations`
 

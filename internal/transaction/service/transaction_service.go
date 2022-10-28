@@ -1,14 +1,18 @@
 package service
 
 import (
+	"encoding/csv"
 	"fmt"
 	"github.com/gocarina/gocsv"
+	"github.com/google/uuid"
 	"github.com/phuslu/log"
 	"github.com/rostikts/fintech_test_project/db/models"
 	"github.com/rostikts/fintech_test_project/internal/transaction"
 	"github.com/rostikts/fintech_test_project/pkg/datatypes"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -35,20 +39,39 @@ func NewTransactionService(repository transaction.Repository) transaction.Servic
 }
 
 func (s transactionService) ParseDocument(url string) (successCount, failedCount int64, err error) {
-	document, err := downloadDocument(url)
+	fileName, err := downloadDocument(url)
 	if err != nil {
 		return 0, 0, err
 	}
-	parsedTrs, err := parseDocument(document)
+
+	// remove file to avoid the OOM exception
+	defer func() {
+		if err := os.Remove(fileName); err != nil {
+			log.DefaultLogger.Error().Err(err).Msg("the tmp dump file is not deleted")
+		}
+	}()
+
+	file, err := os.Open(fileName)
+	defer file.Close()
 	if err != nil {
 		return 0, 0, err
 	}
+
+	parser := csv.NewReader(file)
+	headers, err := parser.Read()
+	if err != nil {
+		return 0, 0, nil
+	}
+
 	wg := sync.WaitGroup{}
-	for _, v := range parsedTrs {
-		v := v
+	for {
+		tr, err := parseDocument(headers, parser)
+		if err == io.EOF {
+			break
+		}
 		wg.Add(1)
 		go func() {
-			if err := s.SaveTransaction(v.ToModel()); err != nil {
+			if err := s.SaveTransaction(tr.ToModel()); err != nil {
 				log.DefaultLogger.Error().Err(err).Msg("The document is not saved to db")
 				atomic.AddInt64(&failedCount, 1)
 			}
@@ -57,6 +80,7 @@ func (s transactionService) ParseDocument(url string) (successCount, failedCount
 		}()
 	}
 	wg.Wait()
+
 	return
 }
 
@@ -77,27 +101,41 @@ func (s transactionService) GetTransactions(filters map[string]string) ([]models
 	return res, nil
 }
 
-func downloadDocument(url string) ([]byte, error) {
+func downloadDocument(url string) (string, error) {
+	fileName := fmt.Sprintf("%v.csv", uuid.New().String())
+	output, err := os.Create(fileName)
+	if err != nil {
+		log.DefaultLogger.Error().Err(err).Msg("error occurred during file creation")
+		return "", err
+	}
+
 	response, err := http.Get(url)
 	if err != nil {
 		log.DefaultLogger.Error().Err(err).Str("url", url).Msg("Error while downloading")
-		return []byte{}, err
+		return "", err
 	}
 	defer response.Body.Close()
 
-	data, err := ioutil.ReadAll(response.Body)
+	_, err = io.Copy(output, response.Body)
 	if err != nil {
-		return []byte{}, err
+		return "", err
 	}
-	return data, nil
+	return fileName, nil
 }
 
-func parseDocument(data []byte) ([]parsedTransaction, error) {
-	var result []parsedTransaction
-	if err := gocsv.UnmarshalBytes(data, &result); err != nil {
-		return []parsedTransaction{}, err
+func parseDocument(headers []string, reader *csv.Reader) (parsedTransaction, error) {
+	record, err := reader.Read()
+	if err != nil {
+		return parsedTransaction{}, err
 	}
-	return result, nil
+
+	// small hack for unmarshalling single csv row into the struct
+	tmpCsv := fmt.Sprintf("%v\n%v", strings.Join(headers, ","), strings.Join(record, ","))
+	var tr []parsedTransaction
+	if err := gocsv.UnmarshalString(tmpCsv, &tr); err != nil {
+		return parsedTransaction{}, err
+	}
+	return tr[0], err
 }
 
 func prepareFilters(filters map[string]string) string {

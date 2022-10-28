@@ -8,7 +8,7 @@
  - start the project vie `make start_project` command
  - run initial migrations `make run_local_migrations`
 
-## Development
+## Testing
 
 After running the project the page with swagger doc will be available via the link: http://127.0.0.1:8000/swagger/index.html
 

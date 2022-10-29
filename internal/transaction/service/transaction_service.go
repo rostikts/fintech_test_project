@@ -115,6 +115,9 @@ func downloadDocument(url string) (string, error) {
 		return "", err
 	}
 	defer response.Body.Close()
+	if response.StatusCode > 299 {
+		return "", fmt.Errorf("invalid status code received during download")
+	}
 
 	_, err = io.Copy(output, response.Body)
 	if err != nil {

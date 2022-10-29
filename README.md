@@ -20,5 +20,5 @@ After running the project the page with swagger doc will be available via the li
 ## Additional tasks
 
 1. Unit/integration -> done
-2. Allow to process big size files with limited RAM -> done in PR #6
-3. Endpoint for returning the csv -> in progress
+2. Allow to process big size files with limited RAM -> done in [PR #6](https://github.com/rostikts/fintech_test_project/pull/6)
+3. Endpoint for returning the csv -> done in [PR #7](https://github.com/rostikts/fintech_test_project/pull/7)

@@ -6,6 +6,7 @@ import (
 	"github.com/gocarina/gocsv"
 	"github.com/google/uuid"
 	"github.com/phuslu/log"
+	"github.com/rostikts/fintech_test_project/config"
 	"github.com/rostikts/fintech_test_project/db/models"
 	"github.com/rostikts/fintech_test_project/internal/transaction"
 	"github.com/rostikts/fintech_test_project/pkg/datatypes"
@@ -39,7 +40,7 @@ func NewTransactionService(repository transaction.Repository) transaction.Servic
 }
 
 func (s transactionService) ParseDocument(url string) (successCount, failedCount int64, err error) {
-	fileName, err := downloadDocument(url)
+	fileName, err := s.downloadDocument(url)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -65,7 +66,7 @@ func (s transactionService) ParseDocument(url string) (successCount, failedCount
 
 	wg := sync.WaitGroup{}
 	for {
-		tr, err := parseDocument(headers, parser)
+		tr, err := s.parseDocument(headers, parser)
 		if err == io.EOF {
 			break
 		}
@@ -101,8 +102,33 @@ func (s transactionService) GetTransactions(filters map[string]string) ([]models
 	return res, nil
 }
 
-func downloadDocument(url string) (string, error) {
-	fileName := fmt.Sprintf("%v.csv", uuid.New().String())
+func (s transactionService) GetTransactionsCSV(filters map[string]string) (string, error) {
+	transactions, err := s.GetTransactions(filters)
+	if err != nil {
+		return "", err
+	}
+	fileName, err := s.storeTransactionsInFile(transactions)
+	if err != nil {
+		return "", err
+	}
+	return fileName, nil
+}
+
+func (s transactionService) storeTransactionsInFile(transactions []models.Transaction) (string, error) {
+	fileName := fmt.Sprintf("%v/%v.csv", config.Config.FilePath, uuid.New().String())
+	output, err := os.Create(fileName)
+	if err != nil {
+		log.DefaultLogger.Error().Err(err).Msg("error occurred during file creation")
+		return "", err
+	}
+	if err := gocsv.MarshalFile(transactions, output); err != nil {
+		return "", err
+	}
+	return fileName, nil
+}
+
+func (s transactionService) downloadDocument(url string) (string, error) {
+	fileName := fmt.Sprintf("%v/%v.csv", config.Config.FilePath, uuid.New().String())
 	output, err := os.Create(fileName)
 	if err != nil {
 		log.DefaultLogger.Error().Err(err).Msg("error occurred during file creation")
@@ -126,7 +152,7 @@ func downloadDocument(url string) (string, error) {
 	return fileName, nil
 }
 
-func parseDocument(headers []string, reader *csv.Reader) (parsedTransaction, error) {
+func (s transactionService) parseDocument(headers []string, reader *csv.Reader) (parsedTransaction, error) {
 	record, err := reader.Read()
 	if err != nil {
 		return parsedTransaction{}, err

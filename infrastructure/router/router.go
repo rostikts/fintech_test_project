@@ -19,5 +19,6 @@ func NewRouter(e *echo.Echo, controller registry.AppController) *echo.Echo {
 	transactionsGroup := v1.Group("/transactions")
 	transactionsGroup.POST("/parse", controller.Transaction.ParseDocuments)
 	transactionsGroup.GET("", controller.Transaction.GetTransactions)
+	transactionsGroup.GET("/csv", controller.Transaction.GetTransactionsCSV)
 	return e
 }

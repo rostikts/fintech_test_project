@@ -2,8 +2,10 @@ package handler
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/phuslu/log"
 	"github.com/rostikts/fintech_test_project/internal/transaction"
 	"net/http"
+	"os"
 )
 
 type transactionHandler struct {
@@ -78,6 +80,36 @@ func (h transactionHandler) GetTransactions(ctx echo.Context) error {
 	}
 
 	return ctx.JSON(http.StatusOK, result)
+}
+
+// GetTransactionsCSV godoc
+// @Summary      returns cvs with transactions
+// @Description  returns csv file with filtered transactions
+// @Tags         transactions
+// @Produce      json
+// @Param        terminal_id          query     int       false  "filter by terminal_id"
+// @Param        transaction_id       query     int       false  "filter by transaction_id"
+// @Param        status               query     string    false  "filter by status"
+// @Param        payment_type         query     string    false  "filter by payment_type"
+// @Param        from              	  query     string    false  "filter from start date"       Format(date)
+// @Param        to                   query     string    false  "filter to ending date"        Format(date)
+// @Param        payment_narrative    query     string    false  "partial match by narrative"
+// @Success      200  {array}   models.Transaction
+// @Failure		 400  {object}  echo.HTTPError
+// @Router       /transactions/csv [get]
+func (h transactionHandler) GetTransactionsCSV(ctx echo.Context) error {
+	filters := extractFilters(ctx)
+
+	fileName, err := h.service.GetTransactionsCSV(filters)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	defer func() {
+		if err := os.Remove(fileName); err != nil {
+			log.DefaultLogger.Error().Err(err).Msg("the tmp sent file is not deleted")
+		}
+	}()
+	return ctx.File(fileName)
 }
 
 func extractFilters(ctx echo.Context) map[string]string {

@@ -18,6 +18,7 @@ func NewTransactionRepository(db *sqlx.DB) transaction.Repository {
 
 func (r transactionRepository) SaveTransaction(data models.Transaction) error {
 	tx, err := r.db.Begin()
+	defer tx.Rollback()
 	if err != nil {
 		return err
 	}

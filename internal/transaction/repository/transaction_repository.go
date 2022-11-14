@@ -45,8 +45,9 @@ func (r transactionRepository) SaveTransaction(data models.Transaction) error {
 	}
 
 	_, err = tx.Exec(`INSERT INTO transaction 
-    							(request_id, terminal_id, partner_object_id, payment_id, service_id, payee_id, amount_total, amount_original, commission_ps, commission_client, commission_provider, date_input, date_post, status) 
-								VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+    							(id, request_id, terminal_id, partner_object_id, payment_id, service_id, payee_id, amount_total, amount_original, commission_ps, commission_client, commission_provider, date_input, date_post, status) 
+								VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+		data.ID,
 		data.RequestID,
 		data.TerminalID,
 		data.PartnerObjectID,

@@ -23,6 +23,7 @@ func TestMain(m *testing.M) {
 
 func TestSaveTransaction(t *testing.T) {
 	data := models.Transaction{
+		ID:              uint(rand.Intn(123456)),
 		RequestID:       2,
 		TerminalID:      3,
 		PartnerObjectID: 4,
@@ -59,6 +60,7 @@ func TestSaveTransaction(t *testing.T) {
 
 func TestTransactionRepositoryGetRecords(t *testing.T) {
 	data := models.Transaction{
+		ID:              uint(rand.Intn(123456)),
 		RequestID:       2,
 		TerminalID:      3,
 		PartnerObjectID: 4,
@@ -97,7 +99,6 @@ func TestTransactionRepositoryGetRecords(t *testing.T) {
 	for _, v := range res {
 
 		// exclude various fields
-		v.ID = 0
 		v.DateInput = data.DateInput
 		v.DatePost = data.DatePost
 
@@ -216,7 +217,6 @@ func TestTransactionRepositoryGetRecordsWithFilter(t *testing.T) {
 			t.Log(len(res))
 
 			// match variable args (serial ids, dates)
-			res[0].ID = 0
 			res[0].DateInput = data.DateInput
 			res[0].DatePost = data.DatePost
 			res[0].Payment.ID = 0

@@ -13,7 +13,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"sync/atomic"
 )
@@ -40,33 +39,21 @@ func NewTransactionService(repository transaction.Repository) transaction.Servic
 }
 
 func (s transactionService) ParseDocument(url string) (successCount, failedCount int64, err error) {
-	fileName, err := s.downloadDocument(url)
+	body, err := s.downloadDocument(url)
+
+	reader := csv.NewReader(body)
+
 	if err != nil {
 		return 0, 0, err
 	}
-
-	// remove file to avoid the OOM exception
-	defer func() {
-		if err := os.Remove(fileName); err != nil {
-			log.DefaultLogger.Error().Err(err).Msg("the tmp dump file is not deleted")
-		}
-	}()
-
-	file, err := os.Open(fileName)
-	defer file.Close()
+	unmarshaler, err := gocsv.NewUnmarshaller(reader, parsedTransaction{})
 	if err != nil {
 		return 0, 0, err
-	}
-
-	parser := csv.NewReader(file)
-	headers, err := parser.Read()
-	if err != nil {
-		return 0, 0, nil
 	}
 
 	wg := sync.WaitGroup{}
 	for {
-		tr, err := s.parseDocument(headers, parser)
+		tr, err := s.parseDocument(unmarshaler)
 		if err == io.EOF {
 			break
 		}
@@ -127,44 +114,30 @@ func (s transactionService) storeTransactionsInFile(transactions []models.Transa
 	return fileName, nil
 }
 
-func (s transactionService) downloadDocument(url string) (string, error) {
-	fileName := fmt.Sprintf("%v/%v.csv", config.Config.FilePath, uuid.New().String())
-	output, err := os.Create(fileName)
-	if err != nil {
-		log.DefaultLogger.Error().Err(err).Msg("error occurred during file creation")
-		return "", err
-	}
+func (s transactionService) downloadDocument(url string) (io.ReadCloser, error) {
 
 	response, err := http.Get(url)
 	if err != nil {
 		log.DefaultLogger.Error().Err(err).Str("url", url).Msg("Error while downloading")
-		return "", err
-	}
-	defer response.Body.Close()
-	if response.StatusCode > 299 {
-		return "", fmt.Errorf("invalid status code received during download")
+		return nil, err
 	}
 
-	_, err = io.Copy(output, response.Body)
-	if err != nil {
-		return "", err
+	if response.StatusCode > 299 {
+		return nil, fmt.Errorf("invalid status code received during download")
 	}
-	return fileName, nil
+	return response.Body, nil
 }
 
-func (s transactionService) parseDocument(headers []string, reader *csv.Reader) (parsedTransaction, error) {
-	record, err := reader.Read()
+func (s transactionService) parseDocument(unmarshaler *gocsv.Unmarshaller) (parsedTransaction, error) {
+	res, err := unmarshaler.Read()
 	if err != nil {
 		return parsedTransaction{}, err
 	}
-
-	// small hack for unmarshalling single csv row into the struct
-	tmpCsv := fmt.Sprintf("%v\n%v", strings.Join(headers, ","), strings.Join(record, ","))
-	var tr []parsedTransaction
-	if err := gocsv.UnmarshalString(tmpCsv, &tr); err != nil {
-		return parsedTransaction{}, err
+	if tr, ok := res.(parsedTransaction); ok {
+		return tr, nil
 	}
-	return tr[0], err
+
+	return parsedTransaction{}, fmt.Errorf("the row was not parsed properly")
 }
 
 func prepareFilters(filters map[string]string) string {

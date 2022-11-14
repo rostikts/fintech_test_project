@@ -113,7 +113,7 @@ func (h transactionHandler) GetTransactionsCSV(ctx echo.Context) error {
 }
 
 func extractFilters(ctx echo.Context) map[string]string {
-	result := make(map[string]string)
+	result := make(map[string]string, len(allowedFilters))
 	for _, filter := range allowedFilters {
 		value := ctx.QueryParams().Get(filter)
 		if value != "" {

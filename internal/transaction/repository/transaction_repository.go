@@ -71,7 +71,7 @@ func (r transactionRepository) SaveTransaction(data models.Transaction) error {
 	return nil
 }
 
-func (r transactionRepository) GetRecords(filters string) ([]models.Transaction, error) {
+func (r transactionRepository) GetRecords(filters string, arguments ...interface{}) ([]models.Transaction, error) {
 	var res []models.Transaction
 	qry := fmt.Sprintf(`SELECT t.id, t.request_id, t.terminal_id, t.partner_object_id, t.amount_original, t.amount_original, t.amount_total, t.commission_client, t.commission_client, t.commission_provider, t.commission_ps, t.date_input, t.date_post, t.status,
        				  payee.id "payee.id", payee.name "payee.name", payee.bank_mfo "payee.bank_mfo", payee.bank_account "payee.bank_account",
@@ -81,9 +81,10 @@ func (r transactionRepository) GetRecords(filters string) ([]models.Transaction,
     				INNER JOIN payee on payee.id = t.payee_id
     				INNER JOIN service s on s.id = t.service_id
     				INNER JOIN payment  on payment.id = t.payment_id 
-    			%s`, filters)
+    			%s
+    			ORDER BY t.id`, filters)
 
-	rows, err := r.db.Queryx(qry)
+	rows, err := r.db.Queryx(qry, arguments...)
 	if err != nil {
 		log.DefaultLogger.Error().Err(err).Msg(qry)
 		return []models.Transaction{}, err

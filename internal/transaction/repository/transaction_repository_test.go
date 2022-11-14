@@ -92,7 +92,7 @@ func TestTransactionRepositoryGetRecords(t *testing.T) {
 	if err := repo.SaveTransaction(data); err != nil {
 		t.Fatalf("The transaction is not saved due to the error: %v", err)
 	}
-	res, err := repo.GetRecords("")
+	res, err := repo.GetRecords("", []interface{}{}...)
 	if err != nil {
 		t.Fatalf("The list of transactions are not found due to the error: %v", err)
 	}
@@ -174,39 +174,39 @@ func TestTransactionRepositoryGetRecordsWithFilter(t *testing.T) {
 		t.Fatalf("The transaction is not saved due to the error: %v", err)
 	}
 	tests := []struct {
-		name     string
-		filters  string
-		expected models.Transaction
+		name         string
+		filters      string
+		filterValues []interface{}
+		expected     models.Transaction
 	}{
 		{
-			name:     "terminal_id filtering",
-			filters:  fmt.Sprintf("WHERE terminal_id=%v", data.TerminalID),
-			expected: data,
+			name:         "terminal_id filtering",
+			filters:      "WHERE terminal_id=$1",
+			filterValues: []interface{}{data.TerminalID},
+			expected:     data,
 		},
 		{
-			name:     "terminal_id filtering",
-			filters:  fmt.Sprintf("WHERE terminal_id=%v", data.TerminalID),
-			expected: data,
+			name:         "status filtering",
+			filters:      "WHERE status=$1",
+			filterValues: []interface{}{data.Status},
+			expected:     data,
 		},
 		{
-			name:     "status filtering",
-			filters:  fmt.Sprintf("WHERE status='%v'", data.Status),
-			expected: data,
+			name:         "payment_type filtering",
+			filters:      "WHERE payment.type=$1",
+			filterValues: []interface{}{data.Payment.Type},
+			expected:     data,
 		},
 		{
-			name:     "payment_type filtering",
-			filters:  fmt.Sprintf("WHERE payment.type='%v'", data.Payment.Type),
-			expected: data,
-		},
-		{
-			name:     "date range filtering",
-			filters:  fmt.Sprintf("WHERE date_input>='%v' AND date_post<='%v'", data.DateInput.Format("2006-01-02"), data.DatePost.Format("2006-01-02")),
-			expected: data,
+			name:         "date range filtering",
+			filters:      "WHERE date_input>=$1 AND date_post<=$2",
+			filterValues: []interface{}{data.DateInput.Format("2006-01-02"), data.DatePost.Format("2006-01-02")},
+			expected:     data,
 		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := repo.GetRecords(tc.filters)
+			res, err := repo.GetRecords(tc.filters, tc.filterValues...)
 			if err != nil {
 				t.Fatalf("The list of transactions are not found due to the error: %v", err)
 			}

@@ -6,5 +6,5 @@ import (
 
 type Repository interface {
 	SaveTransaction(data models.Transaction) error
-	GetRecords(filters string) ([]models.Transaction, error)
+	GetRecords(filters string, arguments ...interface{}) ([]models.Transaction, error)
 }

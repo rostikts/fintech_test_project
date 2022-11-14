@@ -81,8 +81,8 @@ func (s transactionService) SaveTransaction(transaction models.Transaction) erro
 }
 
 func (s transactionService) GetTransactions(filters map[string]string) ([]models.Transaction, error) {
-	formattedFilter := prepareFilters(filters)
-	res, err := s.repo.GetRecords(formattedFilter)
+	formattedFilters, arguments := prepareFilters(filters)
+	res, err := s.repo.GetRecords(formattedFilters, arguments...)
 	if err != nil {
 		return []models.Transaction{}, err
 	}
@@ -140,35 +140,38 @@ func (s transactionService) parseDocument(unmarshaler *gocsv.Unmarshaller) (pars
 	return parsedTransaction{}, fmt.Errorf("the row was not parsed properly")
 }
 
-func prepareFilters(filters map[string]string) string {
+func prepareFilters(filters map[string]string) (string, []interface{}) {
 	if len(filters) == 0 {
-		return ""
+		return "", []interface{}{}
 	}
+	arguments := make([]interface{}, len(filters))
 	result := "WHERE "
 	counter := 0
 	for k, v := range filters {
+		position := counter + 1
 		switch k {
 		case "terminal_id":
-			result += fmt.Sprintf("%s=%s", k, v)
-		case "transaction_id":
-			result += fmt.Sprintf("t.id=%s", v)
+			result += fmt.Sprintf("t.terminal_id=$%v", position)
 		case "status":
-			result += fmt.Sprintf("%s='%s'", k, v)
+			result += fmt.Sprintf("%s=$%v", k, position)
+		case "transaction_id":
+			result += fmt.Sprintf("t.id=$%v", position)
 		case "payment_type":
-			result += fmt.Sprintf("payment.type='%s'", v)
+			result += fmt.Sprintf("payment.type=$%v", position)
 		case "from":
-			result += fmt.Sprintf("date_input>='%v'", v)
+			result += fmt.Sprintf("date_input>=$%v", position)
 		case "to":
-			result += fmt.Sprintf("date_post<='%v'", v)
+			result += fmt.Sprintf("date_post<=$%v", position)
 		case "payment_narrative":
-			result += fmt.Sprintf("payment.narrative LIKE '%%%v%%'", v)
+			result += fmt.Sprintf("payment.narrative LIKE $%v", position)
+			v = "%" + v + "%"
 
 		}
-
+		arguments[counter] = v
 		counter += 1
 		if len(filters) != counter {
 			result += " AND "
 		}
 	}
-	return result
+	return result, arguments
 }
